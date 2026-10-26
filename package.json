@@ -1,0 +1,77 @@
+{
+  "name": "@chatlychat/core",
+  "version": "0.5.0",
+  "description": "Headless Chatly conversation core: identity, conversations, realtime, sending, postbacks, steps, reactions and parsed blocks as typed data. No DOM, no React, zero dependencies.",
+  "license": "MIT",
+  "homepage": "https://github.com/chatlychat/chatly-core#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chatlychat/chatly-core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chatlychat/chatly-core/issues"
+  },
+  "keywords": [
+    "chatly",
+    "chat",
+    "messaging",
+    "headless",
+    "sdk"
+  ],
+  "author": "Chatly",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "default": "./dist/react/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.spec.*",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "verify:pack": "node ../../scripts/verify-package-tarball.mjs packages/core",
+    "typecheck": "tsc -p tsconfig.src.json --noEmit && tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "jsdom": "^30.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.2"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$comment": "The DOM-free check. lib is ES2022 ONLY and `types` is empty, so a `window`, `document`, `localStorage`, `navigator`, `fetch` or `process` reference in non-spec source is a compile error, not a code-review item. The React entry is excluded: it is allowed to see react's types and nothing else.",
+  "extends": "@livechat/config/tsconfig/library.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": [],
+    "outDir": "dist",
+    "rootDir": "src",
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "noEmit": false,
+    "incremental": true,
+    "tsBuildInfoFile": "dist/.src.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/test/**", "src/react/**"]
+}
