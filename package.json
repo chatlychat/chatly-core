@@ -1,6 +1,6 @@
 {
   "name": "@chatlychat/core",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Headless Chatly conversation core: identity, conversations, realtime, sending, postbacks, steps, reactions and parsed blocks as typed data. No DOM, no React, zero dependencies.",
   "license": "MIT",
   "homepage": "https://github.com/chatlychat/chatly-core#readme",

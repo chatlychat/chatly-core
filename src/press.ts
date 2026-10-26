@@ -56,6 +56,8 @@ export interface PressTarget {
   requestStep(canvasId: string, params?: Record<string, unknown>): Promise<unknown>;
 }
 
+const SINK_PATH = /^\/(?![\\/])[^\0-\x20\x7f\\]*$/;
+
 /** Do what the action says. Resolves to whether anything acted. */
 export async function dispatchPress(
   target: PressTarget,
@@ -85,7 +87,13 @@ export async function dispatchPress(
     hooks.onOpenUrl?.(action.href, ref);
     return hooks.onOpenUrl !== undefined;
   }
-  if (action.kind === 'navigate' && hooks.onNavigate !== undefined) {
+  // The host's router receives this string: `//evil.example` would leave the site.
+  if (
+    action.kind === 'navigate' &&
+    hooks.onNavigate !== undefined &&
+    typeof action['path'] === 'string' &&
+    SINK_PATH.test(action['path'])
+  ) {
     await hooks.onNavigate(action, ref);
     return true;
   }
@@ -94,7 +102,8 @@ export async function dispatchPress(
 
 /**
  * Every action a message offers, in document order, with the id the widget
- * gives it: the action's own `id`, else `b<block>[.c<card>].a<n>`. Those are
+ * gives it: the action's own `id`, else `b<block>[.c<card>].a<n>` (`a-1` for a
+ * card's own tap, `a0` for a grid's "more" tile). Those are
  * the ids `reportAction` is keyed on, so a press and its result agree.
  */
 export function messageActions(
@@ -117,13 +126,32 @@ export function messageActions(
       }
     });
   };
+  // A card's own tap (`action`) is `a-1`, as in the widget, so it cannot collide with a button's id.
+  const addOne = (action: unknown, id: string): void => {
+    if (typeof action === 'object' && action !== null) {
+      const own = (action as PressableAction).id;
+      out.push({
+        id: typeof own === 'string' && own.length > 0 ? own : id,
+        action: action as PressableAction,
+      });
+    }
+  };
+  const card = (c: Record<string, unknown>, prefix: string): void => {
+    addOne(c['action'], `${prefix}a-1`);
+    add(c['actions'], prefix);
+  };
   (message.blocks?.blocks ?? []).forEach((block, b) => {
+    const at = `b${String(b)}.`;
     if (block.type === 'card_grid' && Array.isArray(block['cards'])) {
-      (block['cards'] as Array<Record<string, unknown>>).forEach((card, c) =>
-        add(card['actions'], `b${String(b)}.c${String(c)}.`),
+      (block['cards'] as Array<Record<string, unknown>>).forEach((c, n) =>
+        card(c, `${at}c${String(n)}.`),
       );
-    } else if (block.type === 'card' || block.type === 'actions') {
-      add(block['actions'], `b${String(b)}.`);
+      const more = block['more'] as { action?: unknown } | undefined;
+      addOne(more?.action, `${at}a0`);
+    } else if (block.type === 'card') {
+      card(block, at);
+    } else if (block.type === 'actions') {
+      add(block['actions'], at);
     }
   });
   return out;

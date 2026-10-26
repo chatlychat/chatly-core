@@ -76,9 +76,9 @@ export type Action =
   | NavigateAction
   | CopyAction;
 /** What a grid's "show me more" tile may carry. */
-export type PagingAction = UrlAction | PostbackAction;
+export type PagingAction = UrlAction | PostbackAction | NavigateAction;
 /** What a card's image and title may fire. */
-export type CardTapAction = UrlAction | HostEventAction | StepAction;
+export type CardTapAction = UrlAction | HostEventAction | StepAction | NavigateAction;
 
 export interface Field {
   label: string;
@@ -131,6 +131,8 @@ export interface OrderStatusStep {
 /** A card's fields without its `type` -- the shape inside a `card_grid`. */
 export interface CardBody {
   id?: string | undefined;
+  /** 1-128 of `[A-Za-z0-9:._-]`; a stable key the bot owns, for `PATCH /v1/bot/cards?ref=`. */
+  ref?: string | undefined;
   title: string;
   subtitle?: string | undefined;
   image?: string | undefined;

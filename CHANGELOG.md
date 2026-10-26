@@ -1,5 +1,13 @@
 # @chatlychat/core
 
+## 0.6.0 — 2026-10-26
+
+A minor, not a patch: index-based presses on a message with a card tap or a `more` tile now point at different actions.
+
+- `navigate` is accepted as a card's tap target and as a grid's `more` tile (`CardTapAction`, `PagingAction`).
+- `messageActions` (and so `conversation.press`) now enumerate a card's own `action` (id `b0.c1.a-1`, `b0.a-1` on a standalone card) and a grid's `more` action (`b0.a0`), tap first, then the card's buttons. Index-based presses on a message with a card tap or a `more` tile shift by the new entries.
+- `dispatchPress` refuses a `navigate` whose path fails the sink check (`//evil.example`, a backslash, a control character): no hook is called and it resolves `false`.
+
 ## 0.5.0 — 2026-10-26
 
 What a 3D shopping agent needs to act on cards and to know its audience.

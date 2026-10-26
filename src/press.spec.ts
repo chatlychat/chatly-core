@@ -151,4 +151,54 @@ describe('conversation.reactToCard', () => {
     expect(rec.to('/v1/widget/messages')).toHaveLength(0);
     conv.close();
   });
+
+  it('enumerates a card tap and a grid more tile, and presses them as navigate', async () => {
+    const rec = recordingFetch((r) =>
+      r.path === '/v1/widget/messages/list'
+        ? {
+            body: {
+              messages: [
+                msg('m9', {
+                  blocks: {
+                    v: 1,
+                    blocks: [
+                      {
+                        type: 'card_grid',
+                        cards: [
+                          { title: 'A', action: { kind: 'navigate', label: 'A', path: '/a' } },
+                          {
+                            title: 'B',
+                            action: { kind: 'navigate', label: 'B', path: '//evil.test' },
+                          },
+                        ],
+                        more: {
+                          label: 'More',
+                          action: { kind: 'navigate', label: 'M', path: '/all' },
+                        },
+                      },
+                    ],
+                  },
+                }),
+              ],
+            },
+          }
+        : undefined,
+    );
+    const core = createChatlyCore({
+      publicId: 'pub-1',
+      apiUrl: 'https://api.test',
+      fetch: rec.fetch,
+    });
+    const conv = await core.openConversation('conv-1');
+    const seen: unknown[] = [];
+    conv.setPressHooks({ onNavigate: (a, ref) => void seen.push([a['path'], ref.actionId]) });
+    expect(await conv.press('m9', 'b0.c0.a-1')).toBe(true);
+    expect(await conv.press('m9', 'b0.a0')).toBe(true);
+    expect(await conv.press('m9', 'b0.c1.a-1')).toBe(false); // unsafe path refused at the sink
+    expect(seen).toEqual([
+      ['/a', 'b0.c0.a-1'],
+      ['/all', 'b0.a0'],
+    ]);
+    conv.close();
+  });
 });
