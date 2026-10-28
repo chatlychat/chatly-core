@@ -1,5 +1,19 @@
 # @chatlychat/core
 
+## 0.8.0 — 2026-10-28
+
+A minor, not a patch: `PressTarget` gained a required method, so a host passing its own target must implement it.
+
+- **`cards` presses dispatch.** `dispatchPress` has an arm for the `cards` action kind, and `PressTarget` requires `requestCards(cardKey, ref)`. Without it the chain fell through and returned `false` — a 3D world would have DRAWN a "My orders" button and done nothing when it was pressed, which is worse than not supporting the kind, because nothing fails.
+- `CardsAction` in the block types, mirroring `@chatlychat/blocks`. Restated rather than imported, for the standing reason that `core` cannot depend on `blocks`; the parity spec compares the two file texts.
+- `ConversationSnapshot`, `ConnectionState` and `ConversationDeps` moved to `conversation-types.ts` and are re-exported, so no import changes. The file had crossed this repo's 650-line ceiling.
+
+## 0.7.0 — 2026-10-27
+
+- **The `sources` block.** `SourcesBlock` — the help articles an AI answer drew on, as `items: { title, url? }[]`. `url` is optional and that is the feature rather than a gap: an article can ground an answer without being published (a crawled page, an uploaded PDF), and then there is nowhere to send the reader. A title with no link is the honest render; a dashboard URL would be a sign-in page for the person being told to go and read it.
+
+  Restated here rather than imported: `@chatlychat/core` cannot depend on `@chatlychat/blocks`, and `blocks`' own `core-types-parity.spec.ts` compares the two file texts so they cannot drift.
+
 ## 0.6.0 — 2026-10-26
 
 A minor, not a patch: index-based presses on a message with a card tap or a `more` tile now point at different actions.

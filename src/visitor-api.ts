@@ -236,6 +236,22 @@ export class VisitorApi {
     )) as StepRequestResult;
   }
 
+  /**
+   * A card's `cards` action: ask the operator's own backend for this
+   * visitor's data. Key bound to (conversation, card) — a card takes no
+   * arguments, so two presses are always the same request.
+   */
+  public async requestCards(
+    conversationId: string,
+    cardKey: string,
+  ): Promise<{ messageId: string | null; state: string }> {
+    return (await this.call(
+      `/v1/widget/conversations/${conversationId}/cards`,
+      { cardKey },
+      `cards:${conversationId}:${cardKey}`,
+    )) as { messageId: string | null; state: string };
+  }
+
   /** The host's outcome of a card action, into the thread. */
   public async reportAction(
     conversationId: string,

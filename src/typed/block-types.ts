@@ -50,6 +50,22 @@ export interface StepAction {
   icon?: string | undefined;
 }
 
+/**
+ * `cards` — ask the operator's own backend for this visitor's data.
+ *
+ * `cardKey` names a card the operator registered under
+ * `POST /v1/customer-cards`, and only one marked `visitorVisible` can be
+ * named. It SELECTS; it is never a URL or a path.
+ */
+export interface CardsAction {
+  kind: 'cards';
+  label: string;
+  id?: string | undefined;
+  cardKey: string;
+  style?: ActionStyle | undefined;
+  icon?: string | undefined;
+}
+
 export interface NavigateAction {
   kind: 'navigate';
   label: string;
@@ -73,6 +89,7 @@ export type Action =
   | PostbackAction
   | HostEventAction
   | StepAction
+  | CardsAction
   | NavigateAction
   | CopyAction;
 /** What a grid's "show me more" tile may carry. */
@@ -226,6 +243,21 @@ export interface PlaceBlock {
   ref?: string | undefined;
 }
 
+/**
+ * The help articles an AI answer drew on.
+ *
+ * `url` is optional and that is the feature, not a gap: an article can ground
+ * an answer without being published (a crawled page, an uploaded PDF), and
+ * then there is nowhere to send the reader. Every renderer draws the title and
+ * makes it a link only when there is one — a dashboard URL would be a sign-in
+ * page for the person being told to go and read it.
+ */
+export interface SourcesBlock {
+  type: 'sources';
+  id?: string | undefined;
+  items: { title: string; url?: string | undefined }[];
+}
+
 export interface DividerBlock {
   type: 'divider';
   id?: string | undefined;
@@ -243,6 +275,7 @@ export type Block =
   | OrderStatusBlock
   | TableBlock
   | PlaceBlock
+  | SourcesBlock
   | DividerBlock;
 
 export interface BlockEnvelope {

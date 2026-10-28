@@ -10,18 +10,12 @@ import {
   foldUpdated,
   mergeMessages,
   parseMessage,
-  type BlocksReader,
 } from './message.js';
 import { assertCardInMessage, pressMessage, type PressHooks } from './press.js';
 import { connectRealtime, type RealtimeHandle } from './realtime.js';
 
-import type { VisitorSession } from './session.js';
-import type {
-  ConversationMessage,
-  MessageAttachment,
-  SocketFactory,
-  TypingState,
-} from './types.js';
+import type { ConversationSnapshot, ConversationDeps } from './conversation-types.js';
+import type { ConversationMessage, MessageAttachment, SocketFactory } from './types.js';
 import type { PostbackInput, ReactionSummary, StepResult, VisitorApi } from './visitor-api.js';
 
 /** The widget's own typing window (`use-conversation-realtime.tsx`), so a custom UI behaves like it. */
@@ -29,45 +23,11 @@ export const TYPING_STOP_AFTER_MS = 3_500;
 const MIN_POLL_MS = 2_000;
 const DEFAULT_POLL_MS = 6_000;
 
-export type ConnectionState =
-  | 'idle'
-  | 'connecting'
-  | 'live'
-  | 'reconnecting'
-  | 'polling'
-  | 'closed';
-
-/**
- * Everything a renderer draws, as one immutable value.
- *
- * Replaced, never mutated, so `getSnapshot()` is stable between changes and
- * the object is a valid `useSyncExternalStore` snapshot without the React
- * entry having to cache anything.
- */
-export interface ConversationSnapshot {
-  readonly conversationId: string;
-  readonly messages: readonly ConversationMessage[];
-  /** Who is typing, or null. Edge-triggered and self-expiring: see `TYPING_STOP_AFTER_MS`. */
-  readonly typing: TypingState | null;
-  readonly connection: ConnectionState;
-  /** True once the first history page has been read. */
-  readonly loaded: boolean;
-  /** The most recent non-fatal failure (a poll, a socket error). Cleared by the next success. */
-  readonly error: unknown;
-  /** The agent's read pointer: a message id, or `'*'` for "everything". */
-  readonly agentReadUpTo: string | null;
-}
-
-export interface ConversationDeps {
-  readonly conversationId: string;
-  readonly session: VisitorSession;
-  readonly api: VisitorApi;
-  readonly readBlocks: BlocksReader;
-  readonly randomId: () => string;
-  readonly socket?: SocketFactory;
-  readonly pollIntervalMs?: number;
-  readonly now?: () => number;
-}
+export type {
+  ConnectionState,
+  ConversationSnapshot,
+  ConversationDeps,
+} from './conversation-types.js';
 
 type Listener = () => void;
 
@@ -581,6 +541,12 @@ export class Conversation {
   public async requestStep(canvasId: string, params?: Record<string, unknown>) {
     this.assertOpen();
     return this.d.api.requestStep(this.conversationId, canvasId, params);
+  }
+
+  /** A card's `cards` action. The server posts the blocks into the thread. */
+  public async requestCards(cardKey: string) {
+    this.assertOpen();
+    return this.d.api.requestCards(this.conversationId, cardKey);
   }
 
   /** Report the host's outcome of a card action into the thread. */

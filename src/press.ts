@@ -1,7 +1,7 @@
 /**
  * Pressing a block action: the ONE dispatch, used by `conversation.press` and
  * by `@chatlychat/world`'s card handlers, so a 3D host and a headless one
- * cannot disagree about what a `postback`, `step`, `host_event`, `url` or
+ * cannot disagree about what a `postback`, `step`, `cards`, `host_event`, `url` or
  * `navigate` press does.
  *
  * Actions are read loosely (a record with a `kind`), like blocks in
@@ -24,6 +24,8 @@ export interface PressableAction {
   readonly href?: string;
   readonly canvasId?: string;
   readonly params?: Record<string, unknown>;
+  /** A `cards` action's operator-registered card key. */
+  readonly cardKey?: string;
   readonly [key: string]: unknown;
 }
 
@@ -54,6 +56,7 @@ export interface PressTarget {
     silent?: boolean;
   }): Promise<void>;
   requestStep(canvasId: string, params?: Record<string, unknown>): Promise<unknown>;
+  requestCards(cardKey: string): Promise<unknown>;
 }
 
 const SINK_PATH = /^\/(?![\\/])[^\0-\x20\x7f\\]*$/;
@@ -75,6 +78,17 @@ export async function dispatchPress(
   }
   if (action.kind === 'step' && action.canvasId !== undefined) {
     await target.requestStep(action.canvasId, action.params);
+    return true;
+  }
+  /*
+   * Handled HERE and not left to fall through. These `if`s return false for
+   * an unknown kind, which is right for a kind this build has never heard of
+   * and wrong for one the server will happily author into a thread a world
+   * is rendering: the button would draw and do nothing. Same shape as
+   * `step`, which is the other kind whose work happens on our server.
+   */
+  if (action.kind === 'cards' && action.cardKey !== undefined) {
+    await target.requestCards(action.cardKey);
     return true;
   }
   if (action.kind === 'host_event' && action.event !== undefined) {

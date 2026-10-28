@@ -117,10 +117,36 @@ describe('conversation.press', () => {
     const target = {
       postback: () => Promise.resolve(void calls.push('postback')),
       requestStep: () => Promise.resolve(void calls.push('step')),
+      requestCards: () => Promise.resolve(void calls.push('cards')),
     };
     const ref = { messageId: 'm', actionId: 'a' };
     expect(await dispatchPress(target, { kind: 'teleport' }, ref, {})).toBe(false);
     expect(calls).toEqual([]);
+  });
+
+  /*
+   * A `cards` press has to reach the target HERE as well as in the widget.
+   * The server will author this kind into a thread a 3D world is rendering,
+   * and `dispatchPress` returning false for it would draw a button that does
+   * nothing — which is what the `if` chain did before the arm was added.
+   */
+  it('a cards press asks the target for the operator card', async () => {
+    const calls: string[] = [];
+    const target = {
+      postback: () => Promise.resolve(void calls.push('postback')),
+      requestStep: () => Promise.resolve(void calls.push('step')),
+      requestCards: (key: string) => Promise.resolve(void calls.push(`cards:${key}`)),
+    };
+    const ref = { messageId: 'm', actionId: 'a' };
+    expect(
+      await dispatchPress(
+        target,
+        { kind: 'cards', label: 'My orders', cardKey: 'orders' },
+        ref,
+        {},
+      ),
+    ).toBe(true);
+    expect(calls).toEqual(['cards:orders']);
   });
 });
 
