@@ -113,7 +113,11 @@ describe('the core runs with NO DOM present', () => {
         import(/* @vite-ignore */ `./${file.replace(/\.ts$/, '.js')}`),
       ).resolves.toBeDefined();
     }
-  });
+    // 30s, not 5: these two pay the cold vite transform of the WHOLE module
+    // graph inside the test body (measured 12.3s on the build desk, where
+    // this package's collect phase alone is 60s). The third import test runs
+    // in milliseconds because these two warmed it.
+  }, 30_000);
 
   it('a full conversation -- init, start, push, send, postback, react, upload, typing, read, close -- runs', async () => {
     vi.useFakeTimers();
@@ -165,7 +169,7 @@ describe('the core runs with NO DOM present', () => {
     } finally {
       vi.useRealTimers();
     }
-  });
+  }, 30_000);
 
   it('the polling path is DOM-free too', async () => {
     vi.useFakeTimers();

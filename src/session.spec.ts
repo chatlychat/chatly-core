@@ -33,7 +33,7 @@ describe('VisitorSession', () => {
     const rec = recordingFetch();
     const first = new VisitorSession({ ...base, fetch: rec.fetch, storage: store });
     await first.ensure();
-    expect(store.data.get('livechat:vt:pub-1')).toBe('session-token-1');
+    expect(store.data.get('chatly:vt:pub-1')).toBe('session-token-1');
 
     const rec2 = recordingFetch();
     const second = new VisitorSession({ ...base, fetch: rec2.fetch, storage: store });
@@ -51,7 +51,7 @@ describe('VisitorSession', () => {
   });
 
   it('init sends the stored token and identity, and adopts the ROTATED token', async () => {
-    const store = memoryStore({ 'livechat:vt:pub-1': 'old' });
+    const store = memoryStore({ 'chatly:vt:pub-1': 'old' });
     const rec = recordingFetch();
     const s = new VisitorSession({
       ...base,
@@ -69,7 +69,7 @@ describe('VisitorSession', () => {
       identity: { email: 'a@b.c', externalId: 'u1', userHash: 'h' },
     });
     expect(s.visitorToken).toBe('session-token-1');
-    expect(store.data.get('livechat:vt:pub-1')).toBe('session-token-1');
+    expect(store.data.get('chatly:vt:pub-1')).toBe('session-token-1');
     expect(s.contactId).toBe('contact-1');
     expect(s.realtimeUrl).toBe('wss://rt.test');
   });
@@ -116,7 +116,7 @@ describe('VisitorSession', () => {
     for (const shape of ['nested', 'flat'] as const) {
       it(`re-inits once and replays with the NEW token (${shape} error body)`, async () => {
         const rec = flaky(shape);
-        const store = memoryStore({ 'livechat:vt:pub-1': 'stale' });
+        const store = memoryStore({ 'chatly:vt:pub-1': 'stale' });
         const s = new VisitorSession({ ...base, fetch: rec.fetch, storage: store });
         const res = await s.post('/v1/widget/events', { ...s.identity(), name: 'x' });
         expect(res.ok).toBe(true);
@@ -126,7 +126,7 @@ describe('VisitorSession', () => {
         expect(events[1]?.body?.['visitorToken']).toBe('fresh-token');
         // The re-init must not present the dead token.
         expect(rec.to('/v1/widget/init')[0]?.body).not.toHaveProperty('visitorToken');
-        expect(store.data.get('livechat:vt:pub-1')).toBe('fresh-token');
+        expect(store.data.get('chatly:vt:pub-1')).toBe('fresh-token');
       });
     }
 
@@ -135,7 +135,7 @@ describe('VisitorSession', () => {
       const s = new VisitorSession({
         ...base,
         fetch: rec.fetch,
-        storage: memoryStore({ 'livechat:vt:pub-1': 'stale' }),
+        storage: memoryStore({ 'chatly:vt:pub-1': 'stale' }),
       });
       await expect(s.post('/v1/widget/events', { ...s.identity() })).rejects.toMatchObject({
         name: 'ChatlyError',

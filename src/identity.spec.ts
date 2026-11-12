@@ -93,7 +93,7 @@ describe('reset', () => {
     };
     const { rec, core } = setup(true, store);
     await core.identify({ externalId: 'u_42' });
-    expect(data.get('livechat:vt:pub-1')).toBe('tok');
+    expect(data.get('chatly:vt:pub-1')).toBe('tok');
     core.reset();
     expect(data.size).toBe(0);
     expect(core.session.visitorToken).toBeNull();

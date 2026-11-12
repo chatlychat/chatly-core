@@ -93,13 +93,56 @@ export class VisitorSession {
     this.timezone = opts.timezone;
     this.realtimeOverride = opts.realtimeUrl;
     this.analytics = opts.analytics === true;
-    // Key kept as `livechat:vt:` -- the internal scope name sdk-js and the
-    // widget use -- so a browser that already has a token keeps its visitor.
-    this.token = this.storage.getItem(this.storageKey());
+    this.token = this.readToken();
   }
 
+  /**
+   * `chatly:vt:<publicId>` is the CANONICAL key: it is the one the widget
+   * writes (`apps/widget/src/safe-storage.ts`) and the only one the published
+   * storage declaration names (`vendors[product=chatly].storage`, see
+   * `embed-manifest.ts`). This file used to write `livechat:vt:` instead, on
+   * the argument that renaming would orphan every browser holding a token.
+   * The orphaning was real; the conclusion was not, because a read-migration
+   * costs nothing. What the old key DID cost: a visitor could not carry one
+   * session between a world host and the widget on the same site, and a
+   * consent manager blocking the declared key did not block the real one.
+   */
   private storageKey(): string {
+    return `chatly:vt:${this.publicId}`;
+  }
+
+  /** The pre-2026-11-11 key. Read once, migrated forward, never written. */
+  private legacyStorageKey(): string {
     return `livechat:vt:${this.publicId}`;
+  }
+
+  /**
+   * Canonical first, then the legacy key, which is moved forward on the spot
+   * so the fallback is paid at most once per browser.
+   */
+  private readToken(): string | null {
+    const current = this.storage.getItem(this.storageKey());
+    if (current !== null) {
+      return current;
+    }
+    const legacy = this.storage.getItem(this.legacyStorageKey());
+    if (legacy === null) {
+      return null;
+    }
+    this.storage.setItem(this.storageKey(), legacy);
+    this.storage.removeItem(this.legacyStorageKey());
+    return legacy;
+  }
+
+  /**
+   * Both keys, always. Clearing only the canonical one would let the next
+   * `readToken` fall back and RESURRECT the token this just killed — which
+   * on the stale-session path means reviving the very token the server
+   * refused.
+   */
+  private clearToken(): void {
+    this.storage.removeItem(this.storageKey());
+    this.storage.removeItem(this.legacyStorageKey());
   }
 
   /** The API origin every call goes to; a minted media path is relative to it. */
@@ -227,7 +270,7 @@ export class VisitorSession {
     this.remembered = undefined;
     this.verified = false;
     this.xid = null;
-    this.storage.removeItem(this.storageKey());
+    this.clearToken();
   }
 
   public getFetch(): FetchLike {
@@ -295,7 +338,7 @@ export class VisitorSession {
   ): Promise<FetchResponseLike> {
     const retry = { ...(body as Record<string, unknown>) };
     this.token = null;
-    this.storage.removeItem(this.storageKey());
+    this.clearToken();
     if (path === '/v1/widget/init') {
       delete retry['visitorToken'];
       if (retry['identity'] === undefined && this.remembered !== undefined) {

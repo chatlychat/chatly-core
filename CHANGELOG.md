@@ -1,5 +1,17 @@
 # @chatlychat/core
 
+## 0.9.0 — 2026-11-12
+
+A **minor**, not a patch: `@chatlychat/world`'s peer range had to widen for it
+(`>=0.5.0 <0.10.0`), which is a consumer-visible fact even though no exported
+name moved.
+
+- No API change. `no-dom.spec.ts`'s two module-graph tests carry an explicit
+  30s timeout: they pay the cold bundler transform of every core module inside
+  the test body, which on a build machine whose collect phase alone is 60s
+  overran the 5s default and failed the suite for a reason that was never
+  about this package's code.
+
 ## 0.8.0 — 2026-10-28
 
 A minor, not a patch: `PressTarget` gained a required method, so a host passing its own target must implement it.
